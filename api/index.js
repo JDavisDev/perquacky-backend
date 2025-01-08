@@ -1,9 +1,13 @@
-import exp from "express";
+const express = require("express");
 const app = express();
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
 });
 
-app.listen(3000, () => console.log("Server ready on port 3000."));
-export default app;
+app.get("/home", (req, res) => {
+  res.status(200).json("Welcome home");
+});
+
+app.listen(4000, () => console.log("Server ready on port 4000."));
+module.exports = app;
