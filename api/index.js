@@ -19,12 +19,13 @@ app.get("/", (req, res) => {
 
 app.get("/today", (req, res) => {
   console.log("entered today");
-  const today = getTodaysDateEastern();
-  console.log(today);
-  res.status(200).send(today);
+  const today = getTodaysDateEastern().then((result) => {
+    console.log("today is: ${result}");
+    res.status(200).send(today);
+  });
 });
 
-function getTodaysDateEastern() {
+async function getTodaysDateEastern() {
   console.log("entered get todays date eastern");
   MongoClient.connect(uri, function (err, client) {
     if (err) {
