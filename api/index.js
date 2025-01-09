@@ -42,6 +42,7 @@ app.get("/today", (req, res) => {
 
 async function getTodaysDateEastern(res) {
   console.log("entered get todays date eastern");
+  run().catch(console.dir);
   try {
     // official current puzzle day
     const options = {
