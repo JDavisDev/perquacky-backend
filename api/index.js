@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 const cron = require("node-cron");
+const cors = require("cors");
+
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
