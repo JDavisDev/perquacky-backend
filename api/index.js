@@ -10,6 +10,23 @@ app.use(cors());
 const uri = process.env.MONGODB_URL;
 console.log(uri);
 const client = new MongoClient(uri);
+async function run() {
+  try {
+    await client.connect();
+    // database and collection code goes here
+    const db = client.db("quackle");
+    const collection = db.collection("days");
+    // insert code goes here
+    const doc = { date: "02/01/2021" };
+    const result = await collection.insertOne(doc);
+    console.log(`A document was inserted with the _id: ${result.insertedId}`);
+    // display the results of your operation
+  } finally {
+    // Ensures that the client will close when you finish/error
+    await client.close();
+  }
+}
+run().catch(console.dir);
 
 cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
@@ -25,43 +42,37 @@ app.get("/today", (req, res) => {
 
 async function getTodaysDateEastern(res) {
   console.log("entered get todays date eastern");
-  await MongoClient.connect(uri, function (err, client) {
-    if (err) {
-      console.log("Error occurred while connecting to MongoDB Atlas...\n", err);
-      res.status(500).send("Error connecting to mongodb");
-    }
-    try {
-      // official current puzzle day
-      const options = {
-        timeZone: "America/New_York",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      };
-      const formatter = new Intl.DateTimeFormat("en-US", options);
+  try {
+    // official current puzzle day
+    const options = {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+    const formatter = new Intl.DateTimeFormat("en-US", options);
 
-      const easternTime = formatter.format(new Date());
-      console.log(easternTime); // Output: MM/DD/YYYY
-      const db = client.db("quackle");
-      const collection = db.collection("days");
-      const doc = { date: easternTime };
+    const easternTime = formatter.format(new Date());
+    console.log(easternTime); // Output: MM/DD/YYYY
+    const db = client.db("quackle");
+    const collection = db.collection("days");
+    const doc = { date: easternTime };
 
-      collection.insertOne(doc, function (err, result) {
-        if (err) {
-          console.log(err);
-          res.status(500).send("Error inserting document");
-        }
-        console.log("insertion:", result);
-      });
+    collection.insertOne(doc, function (err, result) {
+      if (err) {
+        console.log(err);
+        res.status(500).send("Error inserting document");
+      }
+      console.log("insertion:", result);
+    });
 
-      console.log("at end of try");
-      res.status(200).send("done");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      client.close();
-    }
-  });
+    console.log("at end of try");
+    res.status(200).send("done");
+  } catch (e) {
+    console.error(e);
+  } finally {
+    client.close();
+  }
 }
 
 function setTodayLetters() {
