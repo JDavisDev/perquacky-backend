@@ -10,7 +10,6 @@ app.use(cors());
 const uri = process.env.MONGODB_URL;
 console.log(uri);
 const client = new MongoClient(uri);
-client.connect().catch(console.dir);
 
 cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
@@ -27,6 +26,7 @@ app.get("/today", (req, res) => {
 
 async function getTodaysDateEastern() {
   try {
+    await client.connect();
     // official current puzzle day
     const options = {
       timeZone: "America/New_York",
@@ -45,7 +45,7 @@ async function getTodaysDateEastern() {
     const result = await collection.insertOne(doc);
     console.log("insertion: ${result.insertedId}");
   } finally {
-    await client.close();
+    client.close();
   }
 }
 
