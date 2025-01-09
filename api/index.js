@@ -21,7 +21,6 @@ app.get("/today", (req, res) => {
   console.log("entered today");
   getTodaysDateEastern(res);
   console.log("today is: done");
-  res.status(200).send("done");
 });
 
 async function getTodaysDateEastern(res) {
@@ -56,6 +55,7 @@ async function getTodaysDateEastern(res) {
       });
 
       console.log("at end of try");
+      res.status(200).send("done");
     } catch (e) {
       console.error(e);
     } finally {
