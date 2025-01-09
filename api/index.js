@@ -25,7 +25,7 @@ app.get("/today", (req, res) => {
   });
 });
 
-async function getTodaysDateEastern(res) {
+function getTodaysDateEastern(res) {
   console.log("entered get todays date eastern");
   MongoClient.connect(uri, function (err, client) {
     if (err) {
@@ -53,12 +53,14 @@ async function getTodaysDateEastern(res) {
           console.log(err);
           res.status(500).send("Error inserting document");
         }
-        console.log("insertion: ${result.insertedId}");
+        console.log("insertion:", result);
       });
 
       console.log("at end of try");
+    } catch (e) {
+      console.error(e);
     } finally {
-      // client.close();
+      client.close();
     }
   });
 }
