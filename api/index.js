@@ -24,7 +24,7 @@ async function run() {
     // Ensures that the client will close when you finish/error
   }
 }
-run().catch(console.dir);
+// run().catch(console.dir);
 
 cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
@@ -64,7 +64,7 @@ async function getTodaysDateEastern(res) {
     //   console.log("insertion:", result);
     // });
     // console.log("at end of try");
-    // res.status(200).send("done");
+    res.status(200).send("done");
   } catch (e) {
     console.error(e);
   }
