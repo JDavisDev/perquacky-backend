@@ -16,13 +16,12 @@ async function run() {
     const db = client.db("quackle");
     const collection = db.collection("days");
     // insert code goes here
-    const doc = { date: "02/01/2021" };
+    const doc = { date: "02/01/2022" };
     const result = await collection.insertOne(doc);
     console.log(`A document was inserted with the _id: ${result.insertedId}`);
     // display the results of your operation
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
   }
 }
 run().catch(console.dir);
@@ -70,8 +69,6 @@ async function getTodaysDateEastern(res) {
     res.status(200).send("done");
   } catch (e) {
     console.error(e);
-  } finally {
-    client.close();
   }
 }
 
