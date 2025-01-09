@@ -2,8 +2,12 @@ const express = require("express");
 const app = express();
 const cron = require("node-cron");
 const cors = require("cors");
-use("quackle");
+const { MongoClient } = require("mongodb");
 app.use(cors());
+
+const uri =
+  "mongodb+srv://jdavisdev:tivofGpT20W9N3xb@cluster0.icy8u.mongodb.net/";
+const client = new MongoClient(uri);
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
@@ -25,7 +29,7 @@ function getTodaysDateEastern() {
 
   const easternTime = formatter.format(new Date());
   console.log(easternTime); // Output: MM/DD/YYYY
-  db.getCollection("days").insertOne({ date: easternTime });
+  client.db("quackle").collection("days").insertOne({ date: easternTime });
   return easternTime;
 }
 
