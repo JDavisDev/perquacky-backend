@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 app.get("/today", (req, res) => {
   console.log("entered today");
-  const today = getTodaysDateEastern().catch(console.dir);
+  const today = getTodaysDateEastern();
   console.log(today);
   res.status(200).send(today);
 });
