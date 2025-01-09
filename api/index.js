@@ -3,9 +3,10 @@ const app = express();
 const cron = require("node-cron");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
+require("dotenv").config();
 app.use(cors());
 
-const uri = process.env.connString;
+const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
 
 app.get("/", (req, res) => {
