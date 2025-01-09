@@ -41,7 +41,6 @@ async function getTodaysDateEastern() {
 
     const result = await collection.insertOne(doc);
     console.log("insertion: ${result.insertedId}");
-    return easternTime;
   } finally {
     await client.close();
   }
