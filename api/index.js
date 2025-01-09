@@ -17,28 +17,34 @@ app.get("/", (req, res) => {
 });
 
 app.get("/today", (req, res) => {
-  res.status(200).send(getTodaysDateEastern());
+  const today = getTodaysDateEastern().catch(console.dir);
+  console.log(today);
+  res.status(200).send(today);
 });
 
 async function getTodaysDateEastern() {
-  // official current puzzle day
-  const options = {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  };
-  const formatter = new Intl.DateTimeFormat("en-US", options);
+  try {
+    // official current puzzle day
+    const options = {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+    const formatter = new Intl.DateTimeFormat("en-US", options);
 
-  const easternTime = formatter.format(new Date());
-  console.log(easternTime); // Output: MM/DD/YYYY
-  await client
-    .db("quackle")
-    .collection("days")
-    .insertOne({ date: easternTime })
-    .then((result) => {
-      return easternTime;
-    });
+    const easternTime = formatter.format(new Date());
+    console.log(easternTime); // Output: MM/DD/YYYY
+    const db = client.db("quackle");
+    const collection = db.collection("days");
+    const doc = { date: easternTime };
+
+    const result = await collection.insertOne(doc);
+    console.log("insertion: ${result.insertedId}");
+    return easternTime;
+  } finally {
+    await client.close();
+  }
 }
 
 function setTodayLetters() {
