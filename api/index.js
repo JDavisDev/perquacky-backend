@@ -5,8 +5,7 @@ const cors = require("cors");
 const { MongoClient } = require("mongodb");
 app.use(cors());
 
-const uri =
-  "mongodb+srv://jdavisdev:tivofGpT20W9N3xb@cluster0.icy8u.mongodb.net/";
+const uri = process.env.connString;
 const client = new MongoClient(uri);
 
 app.get("/", (req, res) => {
