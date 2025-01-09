@@ -10,6 +10,8 @@ app.use(cors());
 const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
 
+cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
+
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
 });
@@ -18,7 +20,7 @@ app.get("/today", (req, res) => {
   res.status(200).json(getTodaysDateEastern());
 });
 
-function getTodaysDateEastern() {
+async function getTodaysDateEastern() {
   // official current puzzle day
   const options = {
     timeZone: "America/New_York",
@@ -30,11 +32,12 @@ function getTodaysDateEastern() {
 
   const easternTime = formatter.format(new Date());
   console.log(easternTime); // Output: MM/DD/YYYY
-  client.db("quackle").collection("days").insertOne({ date: easternTime });
+  await client
+    .db("quackle")
+    .collection("days")
+    .insertOne({ date: easternTime });
   return easternTime;
 }
-
-cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
 function setTodayLetters() {
   console.log("running set today letters");
