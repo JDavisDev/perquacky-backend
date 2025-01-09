@@ -165,7 +165,7 @@ async function onLettersGet() {
 app.get("/letters", (req, res) => {
   // fetch Db for today's letters
   onLettersGet();
-  res.status(200).done();
+  res.status(200).send("done");
 });
 
 app.get("/time", (req, res) => {
