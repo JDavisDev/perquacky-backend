@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/today", (req, res) => {
-  res.status(200).json(getTodaysDateEastern());
+  res.status(200).send(getTodaysDateEastern());
 });
 
 async function getTodaysDateEastern() {
@@ -35,8 +35,10 @@ async function getTodaysDateEastern() {
   await client
     .db("quackle")
     .collection("days")
-    .insertOne({ date: easternTime });
-  return easternTime;
+    .insertOne({ date: easternTime })
+    .then((result) => {
+      return easternTime;
+    });
 }
 
 function setTodayLetters() {
