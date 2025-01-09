@@ -8,7 +8,9 @@ require("dotenv").config();
 app.use(cors());
 
 const uri = process.env.MONGODB_URL;
+console.log(uri);
 const client = new MongoClient(uri);
+client.connect().catch(console.dir);
 
 cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
@@ -17,6 +19,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/today", (req, res) => {
+  console.log("entered today");
   const today = getTodaysDateEastern().catch(console.dir);
   console.log(today);
   res.status(200).send(today);
