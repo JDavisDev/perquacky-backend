@@ -1,32 +1,64 @@
 const express = require("express");
 const app = express();
-const cron = require('node-cron');
+const cron = require("node-cron");
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
 });
 
-app.get("/home", (req, res) => {
-  res.status(200).json("Welcome home");
+app.get("/today", (req, res) => {
+  res.status(200).json(getTodaysDateEastern());
 });
 
-function getToday() {
+function getTodaysDateEastern() {
   // official current puzzle day
+  const options = {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  };
+  const formatter = new Intl.DateTimeFormat("en-US", options);
+
+  const easternTime = formatter.format(new Date());
+  console.log(easternTime); // Output: MM/DD/YYYY
+  return easternTime;
 }
 
-cron.schedule('0 0 * * *', setTodayLetters, { timezone: "America/New_York"});
+cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
 function setTodayLetters() {
   console.log("running set today letters");
-  const today = getToday();
+  const today = getTodaysDateEastern();
   const letters = generateLetterSet();
   // insert letters into today if they are unique
-  console.log('today letters are: ${today} : ${...letters}')
+  console.log("today letters are: ${today} : ${...letters}");
 }
 
 function generateLetterSet() {
-  const vowels = ['A', 'E', 'I', 'O', 'U'];
-  const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y'];
+  const vowels = ["A", "E", "I", "O", "U"];
+  const consonants = [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "V",
+    "W",
+    "X",
+    "Y",
+  ];
   const alphabetWithoutZ = [...vowels, ...consonants];
 
   // Randomly determine the number of vowels (between 2 and 5)
@@ -36,8 +68,8 @@ function generateLetterSet() {
   // Randomly pick vowels
   const selectedVowels = [];
   while (selectedVowels.length < numVowels) {
-      const randomVowel = vowels[Math.floor(Math.random() * vowels.length)];
-      selectedVowels.push(randomVowel);
+    const randomVowel = vowels[Math.floor(Math.random() * vowels.length)];
+    selectedVowels.push(randomVowel);
   }
 
   // Randomly pick consonants, ensuring Q includes U
@@ -45,19 +77,23 @@ function generateLetterSet() {
   let hasQ = false;
 
   while (selectedConsonants.length < numConsonants) {
-      const randomConsonant = consonants[Math.floor(Math.random() * consonants.length)];
-      if (randomConsonant === 'Q') {
-          if (!selectedVowels.includes('U')) selectedVowels.push('U'); // Ensure U is added with Q
-          hasQ = true;
-      }
-      selectedConsonants.push(randomConsonant);
+    const randomConsonant =
+      consonants[Math.floor(Math.random() * consonants.length)];
+    if (randomConsonant === "Q") {
+      if (!selectedVowels.includes("U")) selectedVowels.push("U"); // Ensure U is added with Q
+      hasQ = true;
+    }
+    selectedConsonants.push(randomConsonant);
   }
 
   // Combine and shuffle letters
   const selectedLetters = [...selectedVowels, ...selectedConsonants];
   for (let i = selectedLetters.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [selectedLetters[i], selectedLetters[j]] = [selectedLetters[j], selectedLetters[i]];
+    const j = Math.floor(Math.random() * (i + 1));
+    [selectedLetters[i], selectedLetters[j]] = [
+      selectedLetters[j],
+      selectedLetters[i],
+    ];
   }
 
   return selectedLetters;
@@ -69,7 +105,7 @@ app.get("/letters", (req, res) => {
 });
 
 app.get("/time", (req, res) => {
-  res.send("90")
+  res.send("90");
 });
 
 app.post("/score", (req, res) => {
