@@ -10,7 +10,7 @@ app.use(cors());
 const uri = process.env.MONGODB_URL;
 console.log(uri);
 const client = new MongoClient(uri);
-await client.connect().catch(console.dir);
+client.connect().catch(console.dir);
 
 cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
