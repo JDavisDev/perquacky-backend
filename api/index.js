@@ -24,9 +24,9 @@ app.get("/today", (req, res) => {
   res.status(200).send("done");
 });
 
-function getTodaysDateEastern(res) {
+async function getTodaysDateEastern(res) {
   console.log("entered get todays date eastern");
-  MongoClient.connect(uri, function (err, client) {
+  await MongoClient.connect(uri, function (err, client) {
     if (err) {
       console.log("Error occurred while connecting to MongoDB Atlas...\n", err);
       res.status(500).send("Error connecting to mongodb");
