@@ -153,7 +153,7 @@ function generateLetterSet() {
   return selectedLetters;
 }
 
-async function onLettersGet() {
+async function onLettersGet(res) {
   try {
     await setLettersInDb().catch(console.dir);
     res.status(200).send("done");
@@ -164,8 +164,7 @@ async function onLettersGet() {
 
 app.get("/letters", (req, res) => {
   // fetch Db for today's letters
-  onLettersGet();
-  res.status(200).send("done");
+  onLettersGet(res);
 });
 
 app.get("/time", (req, res) => {
