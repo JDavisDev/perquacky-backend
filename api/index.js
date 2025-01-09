@@ -19,10 +19,9 @@ app.get("/", (req, res) => {
 
 app.get("/today", (req, res) => {
   console.log("entered today");
-  getTodaysDateEastern(res).then((result) => {
-    console.log("today is: ", result);
-    res.status(200).send("done");
-  });
+  getTodaysDateEastern(res);
+  console.log("today is: ", result);
+  res.status(200).send("done");
 });
 
 function getTodaysDateEastern(res) {
