@@ -24,29 +24,42 @@ app.get("/today", (req, res) => {
   res.status(200).send(today);
 });
 
-async function getTodaysDateEastern() {
-  try {
-    await client.connect();
-    // official current puzzle day
-    const options = {
-      timeZone: "America/New_York",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    const formatter = new Intl.DateTimeFormat("en-US", options);
+function getTodaysDateEastern() {
+  console.log("entered get todays date eastern");
+  MongoClient.connect(uri, function (err, client) {
+    if (err) {
+      console.log("Error occurred while connecting to MongoDB Atlas...\n", err);
+      res.status(500).send("Error connecting to mongodb");
+    }
+    try {
+      // official current puzzle day
+      const options = {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      };
+      const formatter = new Intl.DateTimeFormat("en-US", options);
 
-    const easternTime = formatter.format(new Date());
-    console.log(easternTime); // Output: MM/DD/YYYY
-    const db = client.db("quackle");
-    const collection = db.collection("days");
-    const doc = { date: easternTime };
+      const easternTime = formatter.format(new Date());
+      console.log(easternTime); // Output: MM/DD/YYYY
+      const db = client.db("quackle");
+      const collection = db.collection("days");
+      const doc = { date: easternTime };
 
-    const result = await collection.insertOne(doc);
-    console.log("insertion: ${result.insertedId}");
-  } finally {
-    client.close();
-  }
+      collection.insertOne(doc, function (err, result) {
+        if (err) {
+          console.log(err);
+          res.status(500).send("Error inserting document");
+        }
+        console.log("insertion: ${result.insertedId}");
+      });
+
+      console.log("at end of try");
+    } finally {
+      // client.close();
+    }
+  });
 }
 
 function setTodayLetters() {
