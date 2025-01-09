@@ -150,6 +150,13 @@ function generateLetterSet() {
     ];
   }
 
+  if (selectedConsonants.length === numConsonants + numVowels + 1) {
+    // If we have an extra letter, remove it
+    selectedConsonants
+      .filter((letter) => letter !== "Q" && letter !== "U")
+      .pop();
+  }
+
   return selectedLetters;
 }
 
