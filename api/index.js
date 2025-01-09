@@ -9,13 +9,11 @@ app.use(cors());
 
 const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
-async function run() {
+async function addTodaysDateToDb() {
   try {
     await client.connect();
-    // database and collection code goes here
     const db = client.db("quackle");
     const collection = db.collection("days");
-    // insert code goes here
     // official current puzzle day
     const options = {
       timeZone: "America/New_York",
@@ -29,12 +27,10 @@ async function run() {
     const doc = { date: easternTime };
     const result = await collection.insertOne(doc);
     console.log(`A document was inserted with the _id: ${result.insertedId}`);
-    // display the results of your operation
   } finally {
     // Ensures that the client will close when you finish/error
   }
 }
-// run().catch(console.dir);
 
 cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
 
@@ -43,29 +39,54 @@ app.get("/", (req, res) => {
 });
 
 app.get("/today", (req, res) => {
-  console.log("entered today");
   getTodaysDateEastern(res);
-  console.log("today is: done");
 });
 
 async function getTodaysDateEastern(res) {
   console.log("entered get todays date eastern");
 
   try {
-    await run().catch(console.dir);
+    await addTodaysDateToDb().catch(console.dir);
     res.status(200).send("done");
   } catch (e) {
     console.error(e);
   }
 }
 
+function getToday() {
+  // official current puzzle day
+  const options = {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  };
+  const formatter = new Intl.DateTimeFormat("en-US", options);
+  return formatter.format(new Date());
+}
+
 function setTodayLetters() {
   console.log("running set today letters");
-  const today = getTodaysDateEastern();
+  const today = getToday();
   const letters = generateLetterSet();
   // insert letters into today if they are unique
 
-  console.log("today letters are: ${today} : ${...letters}");
+  console.log(`today letters are: ${today} : ${letters.join("")}`);
+}
+
+async function setLettersInDb() {
+  try {
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("days");
+    const letters = generateLetterSet();
+
+    const doc = { letters: letters.join("") };
+    const result = await collection.insertOne(doc);
+    console.log(`A document was inserted with the _id: ${result.insertedId}`);
+  } finally {
+    // Ensures that the client will close when you finish/error
+  }
 }
 
 function generateLetterSet() {
@@ -132,9 +153,19 @@ function generateLetterSet() {
   return selectedLetters;
 }
 
+async function onLettersGet() {
+  try {
+    await setLettersInDb().catch(console.dir);
+    res.status(200).send("done");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 app.get("/letters", (req, res) => {
   // fetch Db for today's letters
-  res.send();
+  onLettersGet();
+  res.status(200).done();
 });
 
 app.get("/time", (req, res) => {
