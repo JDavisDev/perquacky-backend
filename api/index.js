@@ -20,7 +20,7 @@ app.get("/", (req, res) => {
 app.get("/today", (req, res) => {
   console.log("entered today");
   getTodaysDateEastern(res);
-  console.log("today is: ", result);
+  console.log("today is: done");
   res.status(200).send("done");
 });
 
