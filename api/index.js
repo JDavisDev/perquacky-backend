@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cron = require("node-cron");
 const cors = require("cors");
-
+use("quackle");
 app.use(cors());
 
 app.get("/", (req, res) => {
@@ -25,6 +25,7 @@ function getTodaysDateEastern() {
 
   const easternTime = formatter.format(new Date());
   console.log(easternTime); // Output: MM/DD/YYYY
+  db.getCollection("days").insertOne({ date: easternTime });
   return easternTime;
 }
 
@@ -35,6 +36,7 @@ function setTodayLetters() {
   const today = getTodaysDateEastern();
   const letters = generateLetterSet();
   // insert letters into today if they are unique
+
   console.log("today letters are: ${today} : ${...letters}");
 }
 
