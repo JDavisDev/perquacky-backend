@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 app.get("/today", (req, res) => {
   console.log("entered today");
-  const today = getTodaysDateEastern(res).then((result) => {
+  getTodaysDateEastern(res).then((result) => {
     console.log("today is: ", result);
     res.status(200).send("done");
   });
