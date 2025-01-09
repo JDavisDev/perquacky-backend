@@ -40,33 +40,31 @@ app.get("/today", (req, res) => {
 
 async function getTodaysDateEastern(res) {
   console.log("entered get todays date eastern");
-  // await run().catch(console.dir);
+
   try {
+    await run().catch(console.dir);
     // official current puzzle day
-    const options = {
-      timeZone: "America/New_York",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    const formatter = new Intl.DateTimeFormat("en-US", options);
-
-    const easternTime = formatter.format(new Date());
-    console.log(easternTime); // Output: MM/DD/YYYY
-    const db = client.db("quackle");
-    const collection = db.collection("days");
-    const doc = { date: easternTime };
-
-    collection.insertOne(doc, function (err, result) {
-      if (err) {
-        console.log(err);
-        res.status(500).send("Error inserting document");
-      }
-      console.log("insertion:", result);
-    });
-
-    console.log("at end of try");
-    res.status(200).send("done");
+    // const options = {
+    //   timeZone: "America/New_York",
+    //   year: "numeric",
+    //   month: "2-digit",
+    //   day: "2-digit",
+    // };
+    // const formatter = new Intl.DateTimeFormat("en-US", options);
+    // const easternTime = formatter.format(new Date());
+    // console.log(easternTime); // Output: MM/DD/YYYY
+    // const db = client.db("quackle");
+    // const collection = db.collection("days");
+    // const doc = { date: easternTime };
+    // collection.insertOne(doc, function (err, result) {
+    //   if (err) {
+    //     console.log(err);
+    //     res.status(500).send("Error inserting document");
+    //   }
+    //   console.log("insertion:", result);
+    // });
+    // console.log("at end of try");
+    // res.status(200).send("done");
   } catch (e) {
     console.error(e);
   }
