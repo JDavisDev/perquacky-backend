@@ -7,7 +7,7 @@ require("./env.js");
 require("dotenv").config();
 app.use(cors());
 
-cron.schedule("0 30 13 * * *", () => { setTodayLetters() }, { timezone: "America/New_York" });
+cron.schedule("0 30 13 * * *", async () => { setTodayLetters() }, { timezone: "America/New_York" });
 
 const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
