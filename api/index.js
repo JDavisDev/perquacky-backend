@@ -70,8 +70,23 @@ function setTodayLetters() {
   const today = getToday();
   const letters = generateLetterSet();
   // insert letters into today if they are unique
-
+  addLettersToDb(letters, today);
   console.log(`today letters are: ${today} : ${letters.join("")}`);
+}
+
+async function addLettersToDb(letters, today) {
+  try {
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("days");
+
+    const doc = { date: today, letters: letters.join("") };
+    const result = await collection.insertOne(doc);
+    console.log(`A document was inserted with the _id: ${result.insertedId}`);
+  } finally {
+    // Ensures that the client will close when you finish/error
+    client.close();
+  }
 }
 
 async function setLettersInDb() {
@@ -141,7 +156,7 @@ function generateLetterSet() {
   }
 
   // Combine and shuffle letters
-  const selectedLetters = [...selectedVowels, ...selectedConsonants];
+  let selectedLetters = [...selectedVowels, ...selectedConsonants];
   for (let i = selectedLetters.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [selectedLetters[i], selectedLetters[j]] = [
@@ -156,6 +171,8 @@ function generateLetterSet() {
       .filter((letter) => letter !== "Q" && letter !== "U")
       .pop();
   }
+
+  selectedLetters = [...selectedVowels, ...selectedConsonants];
 
   return selectedLetters;
 }
