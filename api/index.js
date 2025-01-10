@@ -32,7 +32,7 @@ async function addTodaysDateToDb() {
   }
 }
 
-cron.schedule("0 12 * * *", setTodayLetters(), { timezone: "America/New_York" });
+cron.schedule("30 12 * * *", setTodayLetters(), { timezone: "America/New_York" });
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
@@ -44,7 +44,7 @@ app.get("/today", (req, res) => {
 
 async function getTodaysDateEastern(res) {
   try {
-    setTodayLetters();
+    await setTodayLetters();
     res.status(200).send("done");
   } catch (e) {
     console.error(e);
@@ -63,12 +63,12 @@ function getToday() {
   return formatter.format(new Date());
 }
 
-function setTodayLetters() {
+async function setTodayLetters() {
   console.log("running set today letters");
   const today = getToday();
   const letters = generateLetterSet();
   // insert letters into today if they are unique
-  addLettersToDb(letters, today);
+  await addLettersToDb(letters, today);
   console.log(`today letters are: ${today} : ${letters.join("")}`);
   return;
 }
