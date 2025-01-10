@@ -44,7 +44,7 @@ app.get("/today", (req, res) => {
 
 async function getTodaysDateEastern(res) {
   try {
-    await setTodayLetters().catch(console.dir);
+    setTodayLetters();
     res.status(200).send("done");
   } catch (e) {
     console.error(e);
@@ -70,6 +70,7 @@ function setTodayLetters() {
   // insert letters into today if they are unique
   addLettersToDb(letters, today);
   console.log(`today letters are: ${today} : ${letters.join("")}`);
+  return;
 }
 
 async function addLettersToDb(letters, today) {
