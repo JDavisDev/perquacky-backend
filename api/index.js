@@ -7,6 +7,8 @@ require("./env.js");
 require("dotenv").config();
 app.use(cors());
 
+cron.schedule("0 13 * * *", () => { setTodayLetters() }, { timezone: "America/New_York" });
+
 const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
 async function addTodaysDateToDb() {
@@ -31,8 +33,6 @@ async function addTodaysDateToDb() {
     // Ensures that the client will close when you finish/error
   }
 }
-
-cron.schedule("30 12 * * *", setTodayLetters(), { timezone: "America/New_York" });
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
