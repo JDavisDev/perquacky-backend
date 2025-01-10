@@ -6,7 +6,6 @@ import { cron } from "./cron.js";
 import "./env.js";
 require("dotenv").config();
 app.use(cors());
-app.use('./cron', cron);
 
 // cron.schedule("0 45 13 * * *", async () => { 
 //   console.log("entered cron")
