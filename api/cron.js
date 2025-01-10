@@ -9,7 +9,7 @@ const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
 
 
-export const cron = async () => {
+export default async function cron() {
     console.log("entering cron")
     await setTodayLetters();
     console.log("exit cron");

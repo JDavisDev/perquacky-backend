@@ -1,9 +1,9 @@
-const express = require("express");
+import express from "express";
 const app = express();
-const cors = require("cors");
-const { MongoClient } = require("mongodb");
-const { cron } = require("./cron.js");
-require("./env.js");
+import cors from "cors";
+import { MongoClient } from "mongodb";
+import { cron } from "./cron.js";
+import "./env.js";
 require("dotenv").config();
 app.use(cors());
 app.use('./cron', cron);
@@ -207,4 +207,4 @@ app.get("/scores", (req, res) => {
 });
 
 app.listen(4000, () => console.log("Server ready on port 4000."));
-module.exports = app;
+export default app;
