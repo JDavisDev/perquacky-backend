@@ -10,10 +10,8 @@ const client = new MongoClient(uri);
 
 
 export default async function cron(req, res) {
-    console.log("entering cron")
     await setTodayLetters();
-    console.log("exit cron");
-    res.status(200);
+    res.status(200).send();
 }
 
 async function setTodayLetters() {
