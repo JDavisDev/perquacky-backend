@@ -32,7 +32,7 @@ async function addTodaysDateToDb() {
   }
 }
 
-cron.schedule("0 0 * * *", setTodayLetters, { timezone: "America/New_York" });
+cron.schedule("0 12 * * *", setTodayLetters(), { timezone: "America/New_York" });
 
 app.get("/", (req, res) => {
   res.send("Express on Vercel");
