@@ -89,16 +89,14 @@ async function addLettersToDb(letters, today) {
   }
 }
 
-async function setLettersInDb() {
+async function getLettersInDb() {
   try {
     await client.connect();
     const db = client.db("quackle");
     const collection = db.collection("days");
-    const letters = generateLetterSet();
-
-    const doc = { letters: letters.join("") };
-    const result = await collection.insertOne(doc);
-    console.log(`A document was inserted with the _id: ${result.insertedId}`);
+    const today = getToday();
+    const result = await collection.findOne({ date: today });
+    return result.letters;
   } finally {
     // Ensures that the client will close when you finish/error
   }
@@ -179,8 +177,8 @@ function generateLetterSet() {
 
 async function onLettersGet(res) {
   try {
-    await setLettersInDb().catch(console.dir);
-    res.status(200).send("done");
+    const letters = await getLettersInDb().catch(console.dir);
+    res.status(200).send(letters);
   } catch (e) {
     console.error(e);
   }
