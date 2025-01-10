@@ -43,10 +43,8 @@ app.get("/today", (req, res) => {
 });
 
 async function getTodaysDateEastern(res) {
-  console.log("entered get todays date eastern");
-
   try {
-    await addTodaysDateToDb().catch(console.dir);
+    await setTodayLetters().catch(console.dir);
     res.status(200).send("done");
   } catch (e) {
     console.error(e);
