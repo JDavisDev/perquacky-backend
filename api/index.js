@@ -1,17 +1,18 @@
 const express = require("express");
 const app = express();
-const cron = require("node-cron");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
+const { cron } = require("./cron.js");
 require("./env.js");
 require("dotenv").config();
 app.use(cors());
+app.use('./cron', cron);
 
-cron.schedule("0 45 13 * * *", async () => { 
-  console.log("entered cron")
-  setTodayLetters();
-  console.log("exit cron");
- }, { timezone: "America/New_York" });
+// cron.schedule("0 45 13 * * *", async () => { 
+//   console.log("entered cron")
+//   setTodayLetters();
+//   console.log("exit cron");
+//  }, { timezone: "America/New_York" });
 
 const uri = process.env.MONGODB_URL;
 const client = new MongoClient(uri);
