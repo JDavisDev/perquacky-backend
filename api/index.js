@@ -4,8 +4,6 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import "./env.js";
 require("dotenv").config();
-app.use(express.favicon());
-app.use(cors());
 
 // cron.schedule("0 45 13 * * *", async () => { 
 //   console.log("entered cron")
