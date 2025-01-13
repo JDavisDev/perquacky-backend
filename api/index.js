@@ -214,8 +214,8 @@ app.get("/testAlgo", (req, res) => {
   const allDice = [];
   allDice.push(diceOne, diceTwo, diceThree, diceFour, diceFive);
   allDice.push(diceSix, diceSeven, diceEight, diceNine, diceTen);
-
-  return getRandomCharacters(allDice);
+  const result = getRandomCharacters(allDice);
+  res.status(200).send(result);
 });
 
 app.get("/letters", (req, res) => {
