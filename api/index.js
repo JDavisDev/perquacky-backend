@@ -6,7 +6,7 @@ import "./env.js";
 app.use(cors());
 require("dotenv").config();
 
-// cron.schedule("0 45 13 * * *", async () => { 
+// cron.schedule("0 45 13 * * *", async () => {
 //   console.log("entered cron")
 //   setTodayLetters();
 //   console.log("exit cron");
@@ -75,6 +75,20 @@ async function setTodayLetters() {
   console.log(`today letters are: ${today} : ${letters.join("")}`);
   return;
 }
+
+// Function to get random characters
+const getRandomCharacters = (matrix) => {
+  return matrix.map((childArray) => {
+    // Check if the child array is valid and contains elements
+    if (Array.isArray(childArray) && childArray.length > 0) {
+      // Select a random element
+      const randomIndex = Math.floor(Math.random() * childArray.length);
+      return childArray[randomIndex];
+    }
+    // Return null or handle invalid child arrays as needed
+    return null;
+  });
+};
 
 async function addLettersToDb(letters, today) {
   try {
@@ -185,6 +199,24 @@ async function onLettersGet(res) {
     console.error(e);
   }
 }
+
+app.get("/testAlgo", (req, res) => {
+  const diceOne = ["A, A, A, E, E, E"];
+  const diceTwo = ["A, A, A, E, E, E"];
+  const diceThree = ["B, H, I, K, R, T"];
+  const diceFour = ["F,H,I,R,S,U"];
+  const diceFive = ["G,I,M,R,S,U"];
+  const diceSix = ["E,J,Q,V,X,Z"];
+  const diceSeven = ["F,I,N,P,T,U"];
+  const diceEight = ["C,M,O,O,P,W"];
+  const diceNine = ["D,L,N,O,R,T"];
+  const diceTen = ["B,L,O,O,W,Y"];
+  const allDice = [];
+  allDice.push(diceOne, diceTwo, diceThree, diceFour, diceFive);
+  allDice.push(diceSix, diceSeven, diceEight, diceNine, diceTen);
+
+  return getRandomCharacters(allDice);
+});
 
 app.get("/letters", (req, res) => {
   // fetch Db for today's letters

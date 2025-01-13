@@ -24,7 +24,6 @@ async function setTodayLetters() {
 }
 
 function getToday() {
-  // official current puzzle day
   const options = {
     timeZone: "America/New_York",
     year: "numeric",
@@ -39,6 +38,17 @@ function generateLetterSet() {
   const diceOne = ["A, A, A, E, E, E"];
   const diceTwo = ["A, A, A, E, E, E"];
   const diceThree = ["B, H, I, K, R, T"];
+  const diceFour = ["F,H,I,R,S,U"];
+  const diceFive = ["G,I,M,R,S,U"];
+  const diceSix = ["E,J,Q,V,X,Z"];
+  const diceSeven = ["F,I,N,P,T,U"];
+  const diceEight = ["C,M,O,O,P,W"];
+  const diceNine = ["D,L,N,O,R,T"];
+  const diceTen = ["B,L,O,O,W,Y"];
+  const allDice = [];
+  allDice.push(diceOne, diceTwo, diceThree, diceFour, diceFive);
+  allDice.push(diceSix, diceSeven, diceEight, diceNine, diceTen);
+
   const vowels = ["A", "E", "I", "O", "U"];
   const consonants = [
     "B",
