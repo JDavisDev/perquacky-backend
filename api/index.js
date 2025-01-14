@@ -77,17 +77,19 @@ async function setTodayLetters() {
 }
 
 // Function to get random characters
-const getRandomCharacters = (matrix) => {
-  return matrix.map((childArray) => {
-    if (Array.isArray(childArray) && childArray.length > 0) {
+function getRandomCharacters(matrix) {
+  const returnArray = [];
+  matrix.forEach((element) => {
+    if (Array.isArray(element) && element.length > 0) {
       // Select a random index
-      const randomIndex = Math.floor(Math.random() * childArray.length);
+      const randomIndex = Math.floor(Math.random() * element.length);
       // Return the random element
-      return childArray[randomIndex];
+      returnArray.push(element[randomIndex]);
     }
-    return null; // Handle empty or invalid arrays
   });
-};
+
+  return returnArray;
+}
 
 async function addLettersToDb(letters, today) {
   try {
