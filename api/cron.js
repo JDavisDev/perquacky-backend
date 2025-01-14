@@ -17,6 +17,11 @@ async function setTodayLetters() {
   console.log("running set today letters");
   const today = getToday();
   const letters = generateLetterSet();
+
+  while (letters.includes("Q") && !letters.includes("U")) {
+    letters = generateLetterSet();
+  }
+
   // insert letters into today if they are unique
   await addLettersToDb(letters, today);
   console.log(`today letters are: ${today} : ${letters.join("")}`);
@@ -35,90 +40,39 @@ function getToday() {
 }
 
 function generateLetterSet() {
-  const diceOne = ["A, A, A, E, E, E"];
-  const diceTwo = ["A, A, A, E, E, E"];
-  const diceThree = ["B, H, I, K, R, T"];
-  const diceFour = ["F,H,I,R,S,U"];
-  const diceFive = ["G,I,M,R,S,U"];
-  const diceSix = ["E,J,Q,V,X,Z"];
-  const diceSeven = ["F,I,N,P,T,U"];
-  const diceEight = ["C,M,O,O,P,W"];
-  const diceNine = ["D,L,N,O,R,T"];
-  const diceTen = ["B,L,O,O,W,Y"];
-  const allDice = [];
-  allDice.push(diceOne, diceTwo, diceThree, diceFour, diceFive);
-  allDice.push(diceSix, diceSeven, diceEight, diceNine, diceTen);
-
-  const vowels = ["A", "E", "I", "O", "U"];
-  const consonants = [
-    "B",
-    "C",
-    "D",
-    "F",
-    "G",
-    "H",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "P",
-    "Q",
-    "R",
-    "S",
-    "T",
-    "V",
-    "W",
-    "X",
-    "Y",
+  const diceOne = ["A", "A", "A", "E", "E", "E"];
+  const diceTwo = ["A", "A", "A", "E", "E", "E"];
+  const diceThree = ["B", "H", "I", "K", "R", "T"];
+  const diceFour = ["F", "H", "I", "R", "S", "U"];
+  const diceFive = ["G", "I", "M", "R", "S", "U"];
+  const diceSix = ["E", "J", "Q", "V", "X", "Z"];
+  const diceSeven = ["F", "I", "N", "P", "T", "U"];
+  const diceEight = ["C", "M", "O", "O", "P", "W"];
+  const diceNine = ["D", "L", "N", "O", "R", "T"];
+  const diceTen = ["B", "L", "O", "O", "W", "Y"];
+  const allDice = [
+    diceOne,
+    diceTwo,
+    diceThree,
+    diceFour,
+    diceFive,
+    diceSix,
+    diceSeven,
+    diceEight,
+    diceNine,
+    diceTen,
   ];
-  const alphabetWithoutZ = [...vowels, ...consonants];
-
-  // Randomly determine the number of vowels (between 2 and 5)
-  const numVowels = Math.floor(Math.random() * 4) + 2; // 2 to 5 vowels
-  const numConsonants = 9 - numVowels;
-
-  // Randomly pick vowels
-  const selectedVowels = [];
-  while (selectedVowels.length < numVowels) {
-    const randomVowel = vowels[Math.floor(Math.random() * vowels.length)];
-    selectedVowels.push(randomVowel);
-  }
-
-  // Randomly pick consonants, ensuring Q includes U
-  const selectedConsonants = [];
-  let hasQ = false;
-
-  while (selectedConsonants.length < numConsonants) {
-    const randomConsonant =
-      consonants[Math.floor(Math.random() * consonants.length)];
-    if (randomConsonant === "Q") {
-      if (!selectedVowels.includes("U")) selectedVowels.push("U"); // Ensure U is added with Q
-      hasQ = true;
+  const returnArray = [];
+  allDice.forEach((element) => {
+    if (Array.isArray(element) && element.length > 0) {
+      // Select a random index
+      const randomIndex = Math.floor(Math.random() * element.length);
+      // Return the random element
+      returnArray.push(element[randomIndex]);
     }
-    selectedConsonants.push(randomConsonant);
-  }
+  });
 
-  // Combine and shuffle letters
-  let selectedLetters = [...selectedVowels, ...selectedConsonants];
-  for (let i = selectedLetters.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [selectedLetters[i], selectedLetters[j]] = [
-      selectedLetters[j],
-      selectedLetters[i],
-    ];
-  }
-
-  if (selectedConsonants.length === numConsonants + numVowels + 1) {
-    // If we have an extra letter, remove it
-    selectedConsonants
-      .filter((letter) => letter !== "Q" && letter !== "U")
-      .pop();
-  }
-
-  selectedLetters = [...selectedVowels, ...selectedConsonants];
-
-  return selectedLetters;
+  return returnArray;
 }
 
 async function addLettersToDb(letters, today) {
