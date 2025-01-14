@@ -79,14 +79,13 @@ async function setTodayLetters() {
 // Function to get random characters
 const getRandomCharacters = (matrix) => {
   return matrix.map((childArray) => {
-    // Check if the child array is valid and contains elements
     if (Array.isArray(childArray) && childArray.length > 0) {
-      // Select a random element
+      // Select a random index
       const randomIndex = Math.floor(Math.random() * childArray.length);
+      // Return the random element
       return childArray[randomIndex];
     }
-    // Return null or handle invalid child arrays as needed
-    return null;
+    return null; // Handle empty or invalid arrays
   });
 };
 
@@ -211,9 +210,18 @@ app.get("/testAlgo", (req, res) => {
   const diceEight = ["C,M,O,O,P,W"];
   const diceNine = ["D,L,N,O,R,T"];
   const diceTen = ["B,L,O,O,W,Y"];
-  const allDice = [];
-  allDice.push(diceOne, diceTwo, diceThree, diceFour, diceFive);
-  allDice.push(diceSix, diceSeven, diceEight, diceNine, diceTen);
+  const allDice = [
+    diceOne,
+    diceTwo,
+    diceThree,
+    diceFour,
+    diceFive,
+    diceSix,
+    diceSeven,
+    diceEight,
+    diceNine,
+    diceTen,
+  ];
   const result = getRandomCharacters(allDice);
   res.status(200).send(result);
 });
