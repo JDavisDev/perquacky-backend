@@ -113,7 +113,21 @@ async function getLettersInDb() {
     const collection = db.collection("days");
     const today = getToday();
     const result = await collection.findOne({ date: today });
-    return result.letters;
+    if (result.letters != null && result.letters.length > 0) {
+      return result.letters;
+    } else {
+      const options = {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      };
+      const formatter = new Intl.DateTimeFormat("en-US", options);
+      const today = new Date();
+      const yesterday = today.setDate(today.getDate() - 1);
+      const yesterdayString = formatter.format(yesterday);
+      const resultTwo = await collection.findOne({ date: yesterdayString})
+    }
   } finally {
     // Ensures that the client will close when you finish/error
   }
