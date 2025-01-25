@@ -126,7 +126,8 @@ async function getLettersInDb() {
       const today = new Date();
       const yesterday = today.setDate(today.getDate() - 1);
       const yesterdayString = formatter.format(yesterday);
-      const resultTwo = await collection.findOne({ date: yesterdayString})
+      const resultTwo = await collection.findOne({ date: yesterdayString });
+      return resultTwo.letters;
     }
   } finally {
     // Ensures that the client will close when you finish/error
