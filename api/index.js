@@ -115,7 +115,11 @@ async function getLettersInDb() {
     const result = await collection.findOne({ date: today });
     console.log(result);
     if (result !== null && result.letters !== null) {
-      return result.letters;
+      const data = {
+        date: yesterdayString,
+        letters: result.letters,
+      };
+      return data;
     } else {
       const options = {
         timeZone: "America/New_York",
@@ -129,7 +133,11 @@ async function getLettersInDb() {
       const yesterdayString = formatter.format(yesterday);
       const resultTwo = await collection.findOne({ date: yesterdayString });
       console.log(resultTwo);
-      return resultTwo.letters;
+      const data = {
+        date: yesterdayString,
+        letters: resultTwo.letters,
+      };
+      return data;
     }
   } finally {
     // Ensures that the client will close when you finish/error
@@ -212,7 +220,7 @@ function generateLetterSet() {
 async function onLettersGet(res) {
   try {
     const letters = await getLettersInDb().catch(console.dir);
-    res.status(200).send(letters);
+    res.status(200).json(letters);
   } catch (e) {
     console.error(e);
   }
