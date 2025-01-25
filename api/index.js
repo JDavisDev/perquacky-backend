@@ -114,7 +114,7 @@ async function getLettersInDb() {
     const today = getToday();
     const result = await collection.findOne({ date: today });
     console.log(result);
-    if (result.letters != null && result.letters.length > 0) {
+    if (result.letters != null) {
       return result.letters;
     } else {
       const options = {
