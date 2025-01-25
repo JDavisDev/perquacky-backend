@@ -113,6 +113,7 @@ async function getLettersInDb() {
     const collection = db.collection("days");
     const today = getToday();
     const result = await collection.findOne({ date: today });
+    console.log(result);
     if (result.letters != null && result.letters.length > 0) {
       return result.letters;
     } else {
@@ -127,6 +128,7 @@ async function getLettersInDb() {
       const yesterday = today.setDate(today.getDate() - 1);
       const yesterdayString = formatter.format(yesterday);
       const resultTwo = await collection.findOne({ date: yesterdayString });
+      console.log(resultTwo);
       return resultTwo.letters;
     }
   } finally {
