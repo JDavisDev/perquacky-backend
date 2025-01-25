@@ -45,6 +45,7 @@ function generateLetterSet() {
   const diceThree = ["B", "H", "I", "K", "R", "T"];
   const diceFour = ["F", "H", "I", "R", "S", "U"];
   const diceFive = ["G", "I", "M", "R", "S", "U"];
+  const diceSix = ["E", "J", "Q", "V", "P", "R"];
   const diceSeven = ["F", "I", "N", "P", "T", "E"];
   const diceEight = ["C", "M", "O", "O", "P", "W"];
   const diceNine = ["D", "L", "N", "O", "R", "T"];
@@ -55,6 +56,7 @@ function generateLetterSet() {
     diceThree,
     diceFour,
     diceFive,
+    diceSix,
     diceSeven,
     diceEight,
     diceNine,
