@@ -116,7 +116,7 @@ async function getLettersInDb() {
     console.log(result);
     if (result !== null && result.letters !== null) {
       const data = {
-        date: yesterdayString,
+        date: today,
         letters: result.letters,
       };
       return data;
