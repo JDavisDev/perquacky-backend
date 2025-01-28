@@ -1,3 +1,5 @@
+import { count } from "console";
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -18,7 +20,7 @@ async function setTodayLetters() {
   const today = getToday();
   const letters = generateLetterSet();
 
-  while (letters.includes("Q") && !letters.includes("U")) {
+  while (!areLettersValid(letters)) {
     letters = generateLetterSet();
   }
 
@@ -26,6 +28,28 @@ async function setTodayLetters() {
   await addLettersToDb(letters, today);
   console.log(`today letters are: ${today} : ${letters.join("")}`);
   return;
+}
+
+function areLettersValid(letters) {
+ return letters.includes("Q") && !letters.includes("U") && countVowels(letters) <= 4 && countVowels(letters) > 1;
+}
+
+function countVowels(arr) {
+  // Combine all array elements into a single string
+  const str = arr.join('').toLowerCase();
+  
+  // Define vowels
+  const vowels = 'aeiou';
+  
+  // Count vowels
+  let count = 0;
+  for (const char of str) {
+      if (vowels.includes(char)) {
+          count++;
+      }
+  }
+
+  return count;
 }
 
 function getToday() {
@@ -45,16 +69,18 @@ function generateLetterSet() {
   const diceThree = ["B", "H", "I", "K", "R", "T"];
   const diceFour = ["F", "H", "I", "R", "S", "U"];
   const diceFive = ["G", "I", "M", "R", "S", "U"];
+  const diceSix = ["E", "J", "Q", "V", "X", "Z"];
   const diceSeven = ["F", "I", "N", "P", "T", "E"];
   const diceEight = ["C", "M", "O", "O", "P", "W"];
   const diceNine = ["D", "L", "N", "O", "R", "T"];
-  const diceTen = ["B", "L", "O", "O", "W", "Y"];
+  const diceTen = ["B", "L", "O", "M", "W", "Y"];
   const allDice = [
     diceOne,
     diceTwo,
     diceThree,
     diceFour,
     diceFive,
+    diceSix,
     diceSeven,
     diceEight,
     diceNine,
