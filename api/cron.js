@@ -1,4 +1,3 @@
-import { count } from "console";
 
 const express = require("express");
 const app = express();
@@ -18,7 +17,7 @@ export default async function cron(req, res) {
 async function setTodayLetters() {
   console.log("running set today letters");
   const today = getToday();
-  const letters = generateLetterSet();
+  let letters = generateLetterSet();
 
   while (!areLettersValid(letters)) {
     letters = generateLetterSet();
@@ -69,9 +68,9 @@ function generateLetterSet() {
   const diceThree = ["B", "H", "I", "K", "R", "T"];
   const diceFour = ["F", "H", "I", "R", "S", "U"];
   const diceFive = ["G", "I", "M", "R", "S", "U"];
-  const diceSix = ["E", "J", "Q", "V", "X", "Z"];
+  const diceSix = ["E", "J", "Q", "V", "Y", "P"];
   const diceSeven = ["F", "I", "N", "P", "T", "E"];
-  const diceEight = ["C", "M", "O", "O", "P", "W"];
+  const diceEight = ["C", "M", "O", "M", "P", "W"];
   const diceNine = ["D", "L", "N", "O", "R", "T"];
   const diceTen = ["B", "L", "O", "M", "W", "Y"];
   const allDice = [
