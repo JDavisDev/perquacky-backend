@@ -30,7 +30,11 @@ async function setTodayLetters() {
 }
 
 function areLettersValid(letters) {
- return letters.includes("Q") && !letters.includes("U") && countVowels(letters) <= 4 && countVowels(letters) > 1;
+  if (letters.includes("Q") && !letters.includes("U")) {
+    return false;
+  }
+ const vowelCount = countVowels(letters);
+ return vowelCount <= 4 && vowelCount > 1;
 }
 
 function countVowels(arr) {
