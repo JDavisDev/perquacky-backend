@@ -286,5 +286,311 @@ app.get("/scores/rank/:userId", async (req, res) => {
   }
 });
 
+// ==================== USER ENDPOINTS ====================
+
+// Username validation regex: 3-20 chars, alphanumeric + underscore
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
+
+// Register/update username
+app.post("/users/register", async (req, res) => {
+  try {
+    const { userId, username } = req.body;
+
+    // Validate userId
+    if (!userId || typeof userId !== "string" || userId.length < 10) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+
+    // Validate username format
+    if (!username || !USERNAME_REGEX.test(username)) {
+      return res.status(400).json({
+        error: "INVALID_USERNAME_FORMAT",
+        message: "Username must be 3-20 characters (letters, numbers, underscores only)",
+      });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const usersCollection = db.collection("users");
+
+    const usernameLower = username.toLowerCase();
+
+    // Check if username is already taken by another user
+    const existingUsername = await usersCollection.findOne({
+      usernameLower,
+      userId: { $ne: userId },
+    });
+
+    if (existingUsername) {
+      return res.status(409).json({
+        error: "USERNAME_TAKEN",
+        message: "This username is already taken",
+      });
+    }
+
+    // Upsert user with username
+    await usersCollection.updateOne(
+      { userId },
+      {
+        $set: {
+          username,
+          usernameLower,
+          updatedAt: new Date(),
+        },
+        $setOnInsert: {
+          createdAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      username,
+    });
+  } catch (e) {
+    console.error("Error registering username:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Check username availability
+app.get("/users/check/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    if (!username || !USERNAME_REGEX.test(username)) {
+      return res.status(400).json({ available: false, error: "Invalid username format" });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const usersCollection = db.collection("users");
+
+    const existing = await usersCollection.findOne({
+      usernameLower: username.toLowerCase(),
+    });
+
+    res.status(200).json({ available: !existing });
+  } catch (e) {
+    console.error("Error checking username:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Search users by username
+app.get("/users/search", async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query || query.length < 2) {
+      return res.status(400).json({ error: "Query must be at least 2 characters" });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const usersCollection = db.collection("users");
+
+    const users = await usersCollection
+      .find({
+        usernameLower: { $regex: `^${query.toLowerCase()}` },
+      })
+      .limit(20)
+      .project({ userId: 1, username: 1, _id: 0 })
+      .toArray();
+
+    res.status(200).json({ users });
+  } catch (e) {
+    console.error("Error searching users:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get user profile
+app.get("/users/profile/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    await client.connect();
+    const db = client.db("quackle");
+    const usersCollection = db.collection("users");
+    const scoresCollection = db.collection("scores");
+
+    const user = await usersCollection.findOne({ userId });
+
+    // Get stats from scores
+    const scores = await scoresCollection.find({ userId }).toArray();
+    const stats = {
+      totalGames: scores.length,
+      averageScore:
+        scores.length > 0
+          ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
+          : 0,
+      highScore: scores.length > 0 ? Math.max(...scores.map((s) => s.score)) : 0,
+    };
+
+    res.status(200).json({
+      userId,
+      username: user?.username || null,
+      stats,
+    });
+  } catch (e) {
+    console.error("Error fetching user profile:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ==================== FRIENDS ENDPOINTS ====================
+
+// Add a friend
+app.post("/friends/add", async (req, res) => {
+  try {
+    const { userId, friendUserId } = req.body;
+
+    if (!userId || !friendUserId) {
+      return res.status(400).json({ error: "Missing userId or friendUserId" });
+    }
+
+    if (userId === friendUserId) {
+      return res.status(400).json({
+        error: "CANNOT_ADD_SELF",
+        message: "You cannot add yourself as a friend",
+      });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const friendsCollection = db.collection("friends");
+    const usersCollection = db.collection("users");
+
+    // Check if already friends
+    const existing = await friendsCollection.findOne({ userId, friendUserId });
+    if (existing) {
+      return res.status(409).json({
+        error: "ALREADY_FRIENDS",
+        message: "Already in friends list",
+      });
+    }
+
+    // Get friend's username if they have one
+    const friendUser = await usersCollection.findOne({ userId: friendUserId });
+
+    await friendsCollection.insertOne({
+      userId,
+      friendUserId,
+      friendUsername: friendUser?.username || null,
+      createdAt: new Date(),
+    });
+
+    res.status(201).json({ success: true });
+  } catch (e) {
+    console.error("Error adding friend:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Remove a friend
+app.post("/friends/remove", async (req, res) => {
+  try {
+    const { userId, friendUserId } = req.body;
+
+    if (!userId || !friendUserId) {
+      return res.status(400).json({ error: "Missing userId or friendUserId" });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const friendsCollection = db.collection("friends");
+
+    await friendsCollection.deleteOne({ userId, friendUserId });
+
+    res.status(200).json({ success: true });
+  } catch (e) {
+    console.error("Error removing friend:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get friends list
+app.get("/friends/list/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    await client.connect();
+    const db = client.db("quackle");
+    const friendsCollection = db.collection("friends");
+    const usersCollection = db.collection("users");
+
+    const friendships = await friendsCollection.find({ userId }).toArray();
+
+    // Get current usernames for all friends
+    const friends = await Promise.all(
+      friendships.map(async (f) => {
+        const user = await usersCollection.findOne({ userId: f.friendUserId });
+        return {
+          userId: f.friendUserId,
+          username: user?.username || f.friendUsername || null,
+        };
+      })
+    );
+
+    res.status(200).json({ friends });
+  } catch (e) {
+    console.error("Error fetching friends:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get friends leaderboard
+app.get("/friends/leaderboard/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const date = req.query.date || getToday();
+
+    await client.connect();
+    const db = client.db("quackle");
+    const friendsCollection = db.collection("friends");
+    const scoresCollection = db.collection("scores");
+    const usersCollection = db.collection("users");
+
+    // Get friend userIds
+    const friendships = await friendsCollection.find({ userId }).toArray();
+    const friendUserIds = friendships.map((f) => f.friendUserId);
+
+    // Include self in the leaderboard
+    const allUserIds = [userId, ...friendUserIds];
+
+    // Get scores for friends + self
+    const scores = await scoresCollection
+      .find({ date, userId: { $in: allUserIds } })
+      .sort({ score: -1 })
+      .toArray();
+
+    // Add usernames and ranks
+    const rankedScores = await Promise.all(
+      scores.map(async (s, index) => {
+        const user = await usersCollection.findOne({ userId: s.userId });
+        return {
+          rank: index + 1,
+          userId: s.userId,
+          username: user?.username || null,
+          score: s.score,
+          wordsPlayed: s.wordsPlayed || 0,
+          longestWord: s.longestWord || "",
+        };
+      })
+    );
+
+    res.status(200).json({
+      date,
+      count: rankedScores.length,
+      scores: rankedScores,
+    });
+  } catch (e) {
+    console.error("Error fetching friends leaderboard:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.listen(4000, () => console.log("Server ready on port 4000."));
 export default app;
