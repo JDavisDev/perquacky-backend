@@ -4,6 +4,7 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import "./env.js";
 app.use(cors());
+app.use(express.json());
 require("dotenv").config();
 
 const uri = process.env.MONGODB_URL;
@@ -123,13 +124,166 @@ app.get("/time", (req, res) => {
   res.send("90");
 });
 
-app.post("/score", (req, res) => {
-  const score = req.score;
-  // insert into db for today
+// Submit a score
+app.post("/scores", async (req, res) => {
+  try {
+    const { userId, score, wordsPlayed, longestWord } = req.body;
+
+    // Validation
+    if (!userId || typeof userId !== "string" || userId.length < 10) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+    if (typeof score !== "number" || score < 0) {
+      return res.status(400).json({ error: "Invalid score" });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("scores");
+
+    const today = getToday();
+
+    // Check for existing submission today
+    const existing = await collection.findOne({ userId, date: today });
+    if (existing) {
+      return res.status(409).json({
+        error: "Already submitted score today",
+        existingScore: existing.score,
+      });
+    }
+
+    const doc = {
+      userId,
+      date: today,
+      score,
+      wordsPlayed: wordsPlayed || 0,
+      longestWord: longestWord || "",
+      createdAt: new Date(),
+    };
+
+    const result = await collection.insertOne(doc);
+    res.status(201).json({
+      success: true,
+      id: result.insertedId,
+      date: today,
+    });
+  } catch (e) {
+    console.error("Error submitting score:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-app.get("/scores", (req, res) => {
-  // return db score list for today
+// Get leaderboard for a day
+app.get("/scores/leaderboard", async (req, res) => {
+  try {
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("scores");
+
+    const date = req.query.date || getToday();
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+
+    const scores = await collection
+      .find({ date })
+      .sort({ score: -1 })
+      .limit(limit)
+      .project({ userId: 1, score: 1, wordsPlayed: 1, longestWord: 1, _id: 0 })
+      .toArray();
+
+    // Add rank to each entry
+    const rankedScores = scores.map((s, index) => ({
+      rank: index + 1,
+      ...s,
+    }));
+
+    res.status(200).json({
+      date,
+      count: rankedScores.length,
+      scores: rankedScores,
+    });
+  } catch (e) {
+    console.error("Error fetching leaderboard:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get user's score history
+app.get("/scores/history/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId || userId.length < 10) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("scores");
+
+    const limit = Math.min(parseInt(req.query.limit) || 30, 100);
+
+    const scores = await collection
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .project({ date: 1, score: 1, wordsPlayed: 1, longestWord: 1, _id: 0 })
+      .toArray();
+
+    // Calculate statistics
+    const stats = {
+      totalGames: scores.length,
+      averageScore:
+        scores.length > 0
+          ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length)
+          : 0,
+      highScore: scores.length > 0 ? Math.max(...scores.map((s) => s.score)) : 0,
+    };
+
+    res.status(200).json({
+      userId,
+      stats,
+      history: scores,
+    });
+  } catch (e) {
+    console.error("Error fetching user history:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get user's rank for today
+app.get("/scores/rank/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const date = req.query.date || getToday();
+
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("scores");
+
+    // Get user's score for the day
+    const userScore = await collection.findOne({ userId, date });
+    if (!userScore) {
+      return res.status(404).json({ error: "No score found for this date" });
+    }
+
+    // Count how many scores are higher
+    const higherCount = await collection.countDocuments({
+      date,
+      score: { $gt: userScore.score },
+    });
+
+    const totalCount = await collection.countDocuments({ date });
+
+    res.status(200).json({
+      date,
+      rank: higherCount + 1,
+      totalPlayers: totalCount,
+      score: userScore.score,
+    });
+  } catch (e) {
+    console.error("Error fetching rank:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 app.listen(4000, () => console.log("Server ready on port 4000."));
