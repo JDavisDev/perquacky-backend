@@ -286,6 +286,168 @@ app.get("/scores/rank/:userId", async (req, res) => {
   }
 });
 
+// Get the start of the current week (Sunday)
+function getWeekStart(date = new Date()) {
+  const d = new Date(date);
+  // Convert to Eastern Time for consistency
+  const options = { timeZone: "America/New_York" };
+  const etDate = new Date(d.toLocaleString("en-US", options));
+  const day = etDate.getDay(); // 0 = Sunday
+  etDate.setDate(etDate.getDate() - day);
+  etDate.setHours(0, 0, 0, 0);
+
+  // Format as MM/DD/YYYY
+  const month = String(etDate.getMonth() + 1).padStart(2, "0");
+  const dayOfMonth = String(etDate.getDate()).padStart(2, "0");
+  const year = etDate.getFullYear();
+  return `${month}/${dayOfMonth}/${year}`;
+}
+
+// Get the end of the week (Saturday)
+function getWeekEnd(weekStartStr) {
+  const parts = weekStartStr.split("/");
+  const d = new Date(parts[2], parts[0] - 1, parts[1]);
+  d.setDate(d.getDate() + 6);
+
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${month}/${day}/${year}`;
+}
+
+// Get all dates in a week
+function getWeekDates(weekStartStr) {
+  const parts = weekStartStr.split("/");
+  const startDate = new Date(parts[2], parts[0] - 1, parts[1]);
+  const dates = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const year = d.getFullYear();
+    dates.push(`${month}/${day}/${year}`);
+  }
+
+  return dates;
+}
+
+// Get weekly leaderboard
+app.get("/scores/weekly", async (req, res) => {
+  try {
+    await client.connect();
+    const db = client.db("quackle");
+    const scoresCollection = db.collection("scores");
+    const usersCollection = db.collection("users");
+
+    const weekStart = req.query.weekStart || getWeekStart();
+    const weekEnd = getWeekEnd(weekStart);
+    const weekDates = getWeekDates(weekStart);
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+
+    // Aggregate scores for the week
+    const weeklyScores = await scoresCollection.aggregate([
+      { $match: { date: { $in: weekDates } } },
+      {
+        $group: {
+          _id: "$userId",
+          totalScore: { $sum: "$score" },
+          gamesPlayed: { $sum: 1 },
+          averageScore: { $avg: "$score" }
+        }
+      },
+      { $sort: { totalScore: -1 } },
+      { $limit: limit }
+    ]).toArray();
+
+    // Get usernames for the top players
+    const userIds = weeklyScores.map(s => s._id);
+    const users = await usersCollection.find({ userId: { $in: userIds } }).toArray();
+    const userMap = {};
+    users.forEach(u => { userMap[u.userId] = u.username; });
+
+    // Add rank and username to each entry
+    const rankedScores = weeklyScores.map((s, index) => ({
+      rank: index + 1,
+      userId: s._id,
+      username: userMap[s._id] || null,
+      totalScore: s.totalScore,
+      gamesPlayed: s.gamesPlayed,
+      averageScore: Math.round(s.averageScore)
+    }));
+
+    res.status(200).json({
+      weekStart,
+      weekEnd,
+      count: rankedScores.length,
+      scores: rankedScores,
+    });
+  } catch (e) {
+    console.error("Error fetching weekly leaderboard:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get user's weekly rank
+app.get("/scores/weekly/rank/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const weekStart = req.query.weekStart || getWeekStart();
+    const weekEnd = getWeekEnd(weekStart);
+    const weekDates = getWeekDates(weekStart);
+
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("scores");
+
+    // Get user's total score for the week
+    const userWeeklyStats = await collection.aggregate([
+      { $match: { userId, date: { $in: weekDates } } },
+      {
+        $group: {
+          _id: "$userId",
+          totalScore: { $sum: "$score" },
+          gamesPlayed: { $sum: 1 }
+        }
+      }
+    ]).toArray();
+
+    if (userWeeklyStats.length === 0) {
+      return res.status(404).json({ error: "No scores found for this week" });
+    }
+
+    const userTotal = userWeeklyStats[0].totalScore;
+    const userGames = userWeeklyStats[0].gamesPlayed;
+
+    // Count how many users have higher total scores
+    const allWeeklyScores = await collection.aggregate([
+      { $match: { date: { $in: weekDates } } },
+      {
+        $group: {
+          _id: "$userId",
+          totalScore: { $sum: "$score" }
+        }
+      }
+    ]).toArray();
+
+    const higherCount = allWeeklyScores.filter(s => s.totalScore > userTotal).length;
+    const totalPlayers = allWeeklyScores.length;
+
+    res.status(200).json({
+      weekStart,
+      weekEnd,
+      rank: higherCount + 1,
+      totalPlayers,
+      totalScore: userTotal,
+      gamesPlayed: userGames
+    });
+  } catch (e) {
+    console.error("Error fetching weekly rank:", e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // ==================== USER ENDPOINTS ====================
 
 // Username validation regex: 3-20 chars, alphanumeric + underscore
