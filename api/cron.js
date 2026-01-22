@@ -17,24 +17,25 @@ export default async function cron(req, res) {
 async function setTodayLetters() {
   console.log("running set today letters");
   const today = getToday();
+  const yesterdayLetters = await getYesterdayLetters();
   let letters = generateLetterSet();
 
-  while (!areLettersValid(letters)) {
+  while (!areLettersValid(letters) || letters.join("") === yesterdayLetters) {
     letters = generateLetterSet();
   }
 
   // insert letters into today if they are unique
   await addLettersToDb(letters, today);
   console.log(`today letters are: ${today} : ${letters.join("")}`);
+  if (yesterdayLetters) {
+    console.log(`yesterday letters were: ${yesterdayLetters}`);
+  }
   return;
 }
 
 function areLettersValid(letters) {
-  if (letters.includes("Q") && !letters.includes("U")) {
-    return false;
-  }
- const vowelCount = countVowels(letters);
- return vowelCount <= 4 && vowelCount > 1;
+  const vowelCount = countVowels(letters);
+  return vowelCount <= 4 && vowelCount > 1;
 }
 
 function countVowels(arr) {
@@ -66,17 +67,44 @@ function getToday() {
   return formatter.format(new Date());
 }
 
+function getYesterday() {
+  const options = {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  };
+  const formatter = new Intl.DateTimeFormat("en-US", options);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return formatter.format(yesterday);
+}
+
+async function getYesterdayLetters() {
+  try {
+    await client.connect();
+    const db = client.db("quackle");
+    const collection = db.collection("days");
+    const yesterday = getYesterday();
+    const result = await collection.findOne({ date: yesterday });
+    return result?.letters || null;
+  } catch (e) {
+    console.error("Error fetching yesterday's letters:", e);
+    return null;
+  }
+}
+
 function generateLetterSet() {
-  const diceOne = ["A", "A", "A", "E", "E", "E"];
-  const diceTwo = ["A", "A", "A", "E", "E", "E"];
-  const diceThree = ["B", "H", "I", "K", "R", "T"];
-  const diceFour = ["F", "H", "I", "R", "S", "U"];
-  const diceFive = ["G", "I", "M", "R", "S", "U"];
-  const diceSix = ["E", "J", "Q", "V", "Y", "P"];
-  const diceSeven = ["F", "I", "N", "P", "T", "E"];
-  const diceEight = ["C", "M", "O", "M", "P", "W"];
-  const diceNine = ["D", "L", "N", "O", "R", "T"];
-  const diceTen = ["B", "L", "O", "M", "W", "Y"];
+  const diceOne = ["A", "A", "E", "E", "I", "O"];
+  const diceTwo = ["A", "E", "I", "O", "O", "U"];
+  const diceThree = ["B", "C", "D", "F", "G", "H"];
+  const diceFour = ["H", "K", "L", "M", "N", "P"];
+  const diceFive = ["R", "S", "T", "W", "Y", "Z"];
+  const diceSix = ["D", "L", "N", "R", "S", "T"];
+  const diceSeven = ["E", "I", "N", "R", "S", "T"];
+  const diceEight = ["C", "G", "L", "P", "S", "W"];
+  const diceNine = ["A", "E", "O", "R", "T", "U"];
+  const diceTen = ["B", "F", "M", "N", "V", "Y"];
   const allDice = [
     diceOne,
     diceTwo,
@@ -108,11 +136,13 @@ async function addLettersToDb(letters, today) {
     const db = client.db("quackle");
     const collection = db.collection("days");
 
-    const doc = { date: today, letters: letters.join("") };
-    const result = await collection.insertOne(doc);
-    console.log(`A document was inserted with the _id: ${result.insertedId}`);
+    const result = await collection.updateOne(
+      { date: today },
+      { $setOnInsert: { date: today, letters: letters.join("") } },
+      { upsert: true }
+    );
+    console.log(`Letters for ${today}: ${result.upsertedId ? 'inserted new' : 'already existed'}`);
   } finally {
-    // Ensures that the client will close when you finish/error
     client.close();
   }
 }
